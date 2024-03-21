@@ -24,6 +24,14 @@ Controls:
 The window closing button does not work! Use the <kbd>Esc</kbd> key.
 
 
+## Scoring
+
+- 1 line — 1 point
+- 2 lies at ones — 4 points
+- 3 lies at ones — 9 points
+- 4 lies at ones — 16 points
+
+
 ## TO DO
 
 - [ ] More accurate rotation

@@ -53,9 +53,10 @@ PIECE_SHAPES = (
 
 
 class Color(SimpleNamespace):
-    BORDER = 0.5
+    BORDER = 0.4
     FROZEN = 0.8
     LINE   = 1.0
+    SCORE  = 1.0
 
 
 class Keys(SimpleNamespace):
@@ -106,9 +107,11 @@ class Tetris:
     fall_interval: float
     field: Array
     piece: Piece|None
+    score: int
     
     def __init__(self, fall_interval: float):
         self.fall_interval = fall_interval
+        self.score = 0
         
         # empty field with a border
         self.field = np.full((FIELD_HEIGHT + 2, FIELD_WIDTH + 2), Color.BORDER)
@@ -163,13 +166,16 @@ class Tetris:
         """
         line_minimums = np.min(self.field[1:-1, 1:-1], axis=1)
         full_line_indices = 1 + np.nonzero(line_minimums)[0]
-        if len(full_line_indices) == 0:
+        line_count = len(full_line_indices)
+        if line_count == 0:
             return
         
         # highlight full lines
         for y in full_line_indices:
             self.field[y, 1:-1] = Color.LINE
         self._draw_and_wait(LINE_REMOVING_INTERVAL * 2)
+        
+        self.score += line_count**2
         
         # remove full lines one by one
         for y in full_line_indices:
@@ -188,6 +194,13 @@ class Tetris:
         else:
             composed = self.field
         scaled = cv.resize(composed, None, fx=DISPLAY_SCALE, fy=DISPLAY_SCALE, interpolation=cv.INTER_NEAREST)
+        
+        # display score
+        text = f'score: {self.score}'
+        text_location = (DISPLAY_SCALE, round(DISPLAY_SCALE * 0.8))
+        text_scale = DISPLAY_SCALE / 32
+        scaled = cv.putText(scaled, text, text_location, cv.FONT_HERSHEY_SIMPLEX, text_scale, Color.SCORE)
+        
         cv.imshow('Tetris', scaled)
         return cv.waitKeyEx(max(1, round(interval * 1000)))
     
@@ -219,18 +232,18 @@ class Tetris:
                 freeze_piece = not self._move_piece(dy=1)
                 interval = self.fall_interval
             elif key_code in Keys.EXIT:
-                print('Game aborted')
+                print(f'Game aborted. Your score: {self.score}')
                 break
             
             if freeze_piece:
                 self._freeze_piece()
                 self._remove_full_lines()
                 if not self._place_new_piece():
-                    print('Game over')
+                    print(f'Game over. Your score: {self.score}')
                     break
                 old_time = time()
                 interval = self.fall_interval
 
 
 if __name__ == '__main__':
-    Tetris(fall_interval=0.2).play()
+    Tetris(fall_interval=0.5).play()
