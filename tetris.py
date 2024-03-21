@@ -60,12 +60,12 @@ class Color(SimpleNamespace):
 
 class Key(SimpleNamespace):
     """ Keyboard keys. """
-    NONE   = -1
-    EXIT   = 27  # Esc
-    LEFT   = 81  # Left
-    RIGHT  = 83  # Right
-    ROTATE = 82  # Up
-    DROP   = 84  # Down
+    NONE   = {-1}
+    EXIT   = {27}  # Esc
+    LEFT   = {ord('A'), ord('a'), 81}  # Left arrow
+    RIGHT  = {ord('D'), ord('d'), 83}  # Right arrow
+    ROTATE = {ord('W'), ord('w'), 82}  # Up arrow
+    DROP   = {ord('S'), ord('s'), 84}  # Down arrow
 
 
 @dataclass(frozen=True)
@@ -204,23 +204,22 @@ class Tetris:
             old_time = new_time
             freeze_piece = False
             
-            match key_code:
-                case Key.LEFT:
-                    self._move_piece(dx=-1)
-                case Key.RIGHT:
-                    self._move_piece(dx=1)
-                case Key.ROTATE:
-                    self._move_piece(rotate=True)
-                case Key.DROP:
-                    while self._move_piece(dy=1):
-                        self._draw_and_wait(DROP_INTERVAL)
-                    freeze_piece = True
-                case Key.NONE:
-                    freeze_piece = not self._move_piece(dy=1)
-                    interval = self.fall_interval
-                case Key.EXIT:
-                    print('Game aborted')
-                    break
+            if key_code in Key.LEFT:
+                self._move_piece(dx=-1)
+            elif key_code in Key.RIGHT:
+                self._move_piece(dx=1)
+            elif key_code in Key.ROTATE:
+                self._move_piece(rotate=True)
+            elif key_code in Key.DROP:
+                while self._move_piece(dy=1):
+                    self._draw_and_wait(DROP_INTERVAL)
+                freeze_piece = True
+            elif key_code in Key.NONE:
+                freeze_piece = not self._move_piece(dy=1)
+                interval = self.fall_interval
+            elif key_code in Key.EXIT:
+                print('Game aborted')
+                break
             
             if freeze_piece:
                 self._freeze_piece()
