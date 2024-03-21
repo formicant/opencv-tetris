@@ -58,14 +58,15 @@ class Color(SimpleNamespace):
     LINE   = 1.0
 
 
-class Key(SimpleNamespace):
+class Keys(SimpleNamespace):
     """ Keyboard keys. """
     NONE   = {-1}
-    EXIT   = {27}  # Esc
-    LEFT   = {ord('A'), ord('a'), 81}  # Left arrow
-    RIGHT  = {ord('D'), ord('d'), 83}  # Right arrow
-    ROTATE = {ord('W'), ord('w'), 82}  # Up arrow
-    DROP   = {ord('S'), ord('s'), 84}  # Down arrow
+                      # Linux:  Windows:
+    LEFT   = {ord('a'), 0xFF51, 0x250000}  # Left arrow
+    RIGHT  = {ord('d'), 0xFF53, 0x270000}  # Right arrow
+    ROTATE = {ord('w'), 0xFF52, 0x260000}  # Up arrow
+    DROP   = {ord('s'), 0xFF54, 0x280000}  # Down arrow
+    EXIT   = {0x1B}  # Esc
 
 
 @dataclass(frozen=True)
@@ -188,7 +189,7 @@ class Tetris:
             composed = self.field
         scaled = cv.resize(composed, None, fx=DISPLAY_SCALE, fy=DISPLAY_SCALE, interpolation=cv.INTER_NEAREST)
         cv.imshow('Tetris', scaled)
-        return cv.waitKey(max(1, round(interval * 1000)))
+        return cv.waitKeyEx(max(1, round(interval * 1000)))
     
     
     def play(self) -> None:
@@ -204,20 +205,22 @@ class Tetris:
             old_time = new_time
             freeze_piece = False
             
-            if key_code in Key.LEFT:
+            print(f'{key_code:0x}')
+            
+            if key_code in Keys.LEFT:
                 self._move_piece(dx=-1)
-            elif key_code in Key.RIGHT:
+            elif key_code in Keys.RIGHT:
                 self._move_piece(dx=1)
-            elif key_code in Key.ROTATE:
+            elif key_code in Keys.ROTATE:
                 self._move_piece(rotate=True)
-            elif key_code in Key.DROP:
+            elif key_code in Keys.DROP:
                 while self._move_piece(dy=1):
                     self._draw_and_wait(DROP_INTERVAL)
                 freeze_piece = True
-            elif key_code in Key.NONE:
+            elif key_code in Keys.NONE:
                 freeze_piece = not self._move_piece(dy=1)
                 interval = self.fall_interval
-            elif key_code in Key.EXIT:
+            elif key_code in Keys.EXIT:
                 print('Game aborted')
                 break
             
@@ -232,4 +235,4 @@ class Tetris:
 
 
 if __name__ == '__main__':
-    Tetris(fall_interval=0.5).play()
+    Tetris(fall_interval=0.2).play()
