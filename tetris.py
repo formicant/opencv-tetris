@@ -100,6 +100,9 @@ def is_enough_space(field: Array, piece: Piece) -> bool:
 
 
 class Tetris:
+    field: Array
+    piece: Piece|None
+    
     def __init__(self, fall_interval: float):
         self.fall_interval = fall_interval
         
@@ -127,6 +130,7 @@ class Tetris:
         """ Moves or rotates the piece if it's possible and returns `True`,
             or returns `False` if impossible.
         """
+        assert self.piece is not None
         rotation, x, y = self.piece.rotation, self.piece.x, self.piece.y
         if rotate:
             height, width = get_piece_shape(self.piece.shape_index, rotation).shape
@@ -144,6 +148,7 @@ class Tetris:
     
     def _freeze_piece(self) -> None:
         """ Makes the fallen piece a part of the field. """
+        assert self.piece is not None
         self.field = compose(self.field, self.piece, COLOR_FROZEN)
         self.piece = None
     
