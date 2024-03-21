@@ -23,6 +23,8 @@ Controls:
 **Important:**
 The window closing button does not work! Use the <kbd>Esc</kbd> key.
 
+Arrow keys do not work on Windows.
+
 
 ## TO DO
 
