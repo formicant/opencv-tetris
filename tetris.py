@@ -205,8 +205,6 @@ class Tetris:
             old_time = new_time
             freeze_piece = False
             
-            print(f'{key_code:0x}')
-            
             if key_code in Keys.LEFT:
                 self._move_piece(dx=-1)
             elif key_code in Keys.RIGHT:
