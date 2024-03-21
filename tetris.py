@@ -1,4 +1,4 @@
-from enum import Enum
+from types import SimpleNamespace
 from dataclasses import dataclass
 from random import randrange
 from time import time
@@ -9,10 +9,6 @@ import cv2 as cv
 
 FIELD_WIDTH = 10
 FIELD_HEIGHT = 20
-
-COLOR_BORDER = 0.5
-COLOR_FROZEN = 0.8
-COLOR_LINE   = 1.0
 
 DISPLAY_SCALE = 32
 
@@ -56,7 +52,13 @@ PIECE_SHAPES = (
 )
 
 
-class Key(Enum):
+class Color(SimpleNamespace):
+    BORDER = 0.5
+    FROZEN = 0.8
+    LINE   = 1.0
+
+
+class Key(SimpleNamespace):
     """ Keyboard keys. """
     NONE   = -1
     EXIT   = 27  # Esc
@@ -100,6 +102,7 @@ def is_enough_space(field: Array, piece: Piece) -> bool:
 
 
 class Tetris:
+    fall_interval: float
     field: Array
     piece: Piece|None
     
@@ -107,7 +110,7 @@ class Tetris:
         self.fall_interval = fall_interval
         
         # empty field with a border
-        self.field = np.full((FIELD_HEIGHT + 2, FIELD_WIDTH + 2), COLOR_BORDER)
+        self.field = np.full((FIELD_HEIGHT + 2, FIELD_WIDTH + 2), Color.BORDER)
         self.field[1:FIELD_HEIGHT + 1, 1:FIELD_WIDTH + 1] = 0
         
         self._place_new_piece()
@@ -149,7 +152,7 @@ class Tetris:
     def _freeze_piece(self) -> None:
         """ Makes the fallen piece a part of the field. """
         assert self.piece is not None
-        self.field = compose(self.field, self.piece, COLOR_FROZEN)
+        self.field = compose(self.field, self.piece, Color.FROZEN)
         self.piece = None
     
     
@@ -164,7 +167,7 @@ class Tetris:
         
         # highlight full lines
         for y in full_line_indices:
-            self.field[y, 1:-1] = COLOR_LINE
+            self.field[y, 1:-1] = Color.LINE
         self._draw_and_wait(LINE_REMOVING_INTERVAL * 2)
         
         # remove full lines one by one
@@ -174,10 +177,10 @@ class Tetris:
             self._draw_and_wait(LINE_REMOVING_INTERVAL)
     
     
-    def _draw_and_wait(self, interval: float) -> Key:
+    def _draw_and_wait(self, interval: float) -> int:
         """ Draws a frame.
             Waits for the given time interval or a key press.
-            Returns the pressed key (or `Key.None` if no key has been pressed).
+            Returns the pressed key code (or `Key.None` if no key has been pressed).
         """
         if self.piece is not None:
             composed = compose(self.field, self.piece)
@@ -185,7 +188,7 @@ class Tetris:
             composed = self.field
         scaled = cv.resize(composed, None, fx=DISPLAY_SCALE, fy=DISPLAY_SCALE, interpolation=cv.INTER_NEAREST)
         cv.imshow('Tetris', scaled)
-        return Key(cv.waitKey(max(1, round(interval * 1000))))
+        return cv.waitKey(max(1, round(interval * 1000)))
     
     
     def play(self) -> None:
@@ -195,13 +198,13 @@ class Tetris:
         interval = self.fall_interval
         
         while(True):
-            key = self._draw_and_wait(interval)
+            key_code = self._draw_and_wait(interval)
             new_time = time()
             interval -= new_time - old_time
             old_time = new_time
             freeze_piece = False
             
-            match key:
+            match key_code:
                 case Key.LEFT:
                     self._move_piece(dx=-1)
                 case Key.RIGHT:
