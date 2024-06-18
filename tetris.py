@@ -53,10 +53,17 @@ PIECE_SHAPES = (
 
 
 class Color(SimpleNamespace):
-    BORDER = 0.4
-    FROZEN = 0.8
-    LINE   = 1.0
-    SCORE  = 1.0
+    CHECKER_ADD = 0.2
+    LINE_ADD    = 0.01
+    BORDER      = 0.4
+    FROZEN      = 0.8
+    LINE        = 1.0
+    SCORE       = 1.0
+
+
+FIELD_CHECKERS = np.zeros((FIELD_HEIGHT + 2, FIELD_WIDTH + 2))
+FIELD_CHECKERS[1:FIELD_HEIGHT + 1:2, 1:FIELD_WIDTH + 1:2] = Color.CHECKER_ADD
+FIELD_CHECKERS[2:FIELD_HEIGHT + 1:2, 2:FIELD_WIDTH + 1:2] = Color.CHECKER_ADD
 
 
 class Keys(SimpleNamespace):
@@ -189,10 +196,13 @@ class Tetris:
             Waits for the given time interval or a key press.
             Returns the pressed key code (or `Key.None` if no key has been pressed).
         """
+        composed = self.field.copy()
+        composed[1:FIELD_HEIGHT + 1, 1:FIELD_WIDTH + 1:2] += Color.LINE_ADD
         if self.piece is not None:
-            composed = compose(self.field, self.piece)
-        else:
-            composed = self.field
+            composed = compose(composed, self.piece)
+        composed **= 0.5
+        composed += FIELD_CHECKERS
+        composed **= 2
         scaled = cv.resize(composed, None, fx=DISPLAY_SCALE, fy=DISPLAY_SCALE, interpolation=cv.INTER_NEAREST)
         
         # display score
